@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "To-Do List"
+version = "1.0.0"
+id = "artifacts/todo-app"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 22448
+
+[services.development]
+run = "pnpm --filter @workspace/todo-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/todo-app", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/todo-app", "run", "serve" ]
+
+[services.env]
+PORT = "22448"
+BASE_PATH = "/"

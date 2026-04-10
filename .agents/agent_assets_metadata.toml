@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "Hsp31e0eS64lT9GL3a0bK"
+uri = "file://artifacts/todo-app/assets/images/icon.png"
+type = "image"
+title = "todo app icon"

@@ -25,3 +25,22 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## Artifacts
+
+### To-Do List Mobile App (`artifacts/todo-app`)
+- **Type**: Expo (React Native) mobile app
+- **Preview Path**: `/`
+- **Tech**: Expo Router, React Native, AsyncStorage
+- **Features**:
+  - Main Menu with Add, View, Update, Delete, Exit
+  - Add Task screen with title, description, due date
+  - View Tasks with filter by All / Pending / Completed
+  - Edit Task screen with status toggle (pending/completed)
+  - Delete confirmation dialogs
+  - AsyncStorage persistence
+  - Overdue date detection
+  - Task stats on main menu
+  - Goodbye screen
+- **Colors**: Indigo/violet purple theme (`#6c63ff`)
+- **Packages added**: `@react-native-async-storage/async-storage`, `@react-native-community/datetimepicker`
