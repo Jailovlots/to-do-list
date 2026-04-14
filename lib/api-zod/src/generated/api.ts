@@ -14,3 +14,65 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary List all tasks
+ */
+export const ListTasksResponseItem = zod.object({
+  id: zod.string().uuid(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  dueDate: zod.coerce.date().nullish(),
+  status: zod.enum(["pending", "completed"]),
+  createdAt: zod.coerce.date(),
+});
+export const ListTasksResponse = zod.array(ListTasksResponseItem);
+
+/**
+ * @summary Create a new task
+ */
+export const CreateTaskBody = zod.object({
+  title: zod.string(),
+  description: zod.string().nullish(),
+  dueDate: zod.coerce.date().nullish(),
+});
+
+/**
+ * @summary Update a task
+ */
+export const UpdateTaskParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const UpdateTaskBody = zod.object({
+  title: zod.string().optional(),
+  description: zod.string().nullish(),
+  dueDate: zod.coerce.date().nullish(),
+  status: zod.enum(["pending", "completed"]).optional(),
+});
+
+export const UpdateTaskResponse = zod
+  .object({
+    id: zod.string().uuid(),
+    title: zod.string(),
+    description: zod.string().nullish(),
+    dueDate: zod.coerce.date().nullish(),
+    status: zod.enum(["pending", "completed"]),
+    createdAt: zod.coerce.date(),
+  })
+  .and(
+    zod.object({
+      message: zod.string(),
+    }),
+  );
+
+/**
+ * @summary Delete a task
+ */
+export const DeleteTaskParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const DeleteTaskResponse = zod.object({
+  message: zod.string(),
+});

@@ -32,15 +32,21 @@ export default function AddTaskScreen() {
       Alert.alert("Title required", "Please enter a task title.");
       return;
     }
-    addTask({ title: title.trim(), description: description.trim(), dueDate });
-    if (Platform.OS !== "web") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-    Alert.alert("Task Saved", `"${title.trim()}" has been added to your list.`, [
-      { text: "Add Another", onPress: () => { setTitle(""); setDescription(""); setDueDate(null); } },
-      { text: "View Tasks", onPress: () => router.replace("/tasks") },
-      { text: "Main Menu", onPress: () => router.replace("/") },
-    ]);
+    addTask(
+      { title: title.trim(), description: description.trim(), dueDate },
+      {
+        onSuccess: () => {
+          if (Platform.OS !== "web") {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+          Alert.alert("done", `"${title.trim()}" has been added to your list.`, [
+            { text: "Add Another", onPress: () => { setTitle(""); setDescription(""); setDueDate(null); } },
+            { text: "View Tasks", onPress: () => router.replace("/tasks") },
+            { text: "Main Menu", onPress: () => router.replace("/") },
+          ]);
+        }
+      }
+    );
   };
 
   return (

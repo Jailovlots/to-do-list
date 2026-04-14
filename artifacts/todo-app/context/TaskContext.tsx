@@ -1,98 +1,117 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
   useCallback,
   useContext,
-  useEffect,
-  useState,
 } from "react";
+import { Alert, Platform } from "react-native";
+import {
+  useListTasks,
+  useCreateTask,
+  useUpdateTask,
+  useDeleteTask,
+  type Task,
+} from "@workspace/api-client-react";
 
-export type TaskStatus = "pending" | "completed";
-
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  dueDate: string | null;
-  status: TaskStatus;
-  createdAt: string;
-}
+export type { Task };
 
 interface TaskContextValue {
   tasks: Task[];
-  addTask: (task: Omit<Task, "id" | "createdAt" | "status">) => void;
-  updateTask: (id: string, updates: Partial<Omit<Task, "id" | "createdAt">>) => void;
+  isLoading: boolean;
+  addTask: (task: { title: string; description?: string; dueDate?: string | null }, options?: { onSuccess?: () => void }) => void;
+  updateTask: (id: string, updates: { title?: string; description?: string | null; dueDate?: string | null; status?: "pending" | "completed" }, options?: { onSuccess?: () => void }) => void;
   deleteTask: (id: string) => void;
   toggleStatus: (id: string) => void;
   getTask: (id: string) => Task | undefined;
+  refresh: () => void;
 }
 
 const TaskContext = createContext<TaskContextValue | undefined>(undefined);
 
-const STORAGE_KEY = "@todo_tasks_v1";
-
-function generateId(): string {
-  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-}
+const notify = (title: string, message?: string) => {
+  if (Platform.OS === "web") {
+    // Web handles window.alert better in some environments than Alert.alert shim
+    alert(message ? `${title}: ${message}` : title);
+  } else {
+    Alert.alert(title, message);
+  }
+};
 
 export function TaskProvider({ children }: { children: React.ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>([]);
-
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((stored) => {
-      if (stored) {
-        try {
-          setTasks(JSON.parse(stored));
-        } catch {
-          setTasks([]);
-        }
-      }
-    });
-  }, []);
-
-  const persist = useCallback((updated: Task[]) => {
-    setTasks(updated);
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  }, []);
+  const { data: tasks = [], isLoading, refetch } = useListTasks();
+  const createTaskMutation = useCreateTask();
+  const updateTaskMutation = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask();
 
   const addTask = useCallback(
-    (task: Omit<Task, "id" | "createdAt" | "status">) => {
-      const newTask: Task = {
-        ...task,
-        id: generateId(),
-        status: "pending",
-        createdAt: new Date().toISOString(),
-      };
-      persist([newTask, ...tasks]);
+    (task: { title: string; description?: string | null; dueDate?: string | null }, options?: { onSuccess?: () => void }) => {
+      createTaskMutation.mutate(
+        { data: task },
+        {
+          onSuccess: (data) => {
+            refetch();
+            if (options?.onSuccess) {
+              options.onSuccess();
+            } else {
+              notify(data.message || "done");
+            }
+          },
+        }
+      );
     },
-    [tasks, persist]
+    [createTaskMutation, refetch]
   );
 
   const updateTask = useCallback(
-    (id: string, updates: Partial<Omit<Task, "id" | "createdAt">>) => {
-      persist(tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+    (id: string, updates: { title?: string; description?: string | null; dueDate?: string | null; status?: "pending" | "completed" }, options?: { onSuccess?: () => void }) => {
+      updateTaskMutation.mutate(
+        { id, data: updates },
+        {
+          onSuccess: (data) => {
+            refetch();
+            if (options?.onSuccess) {
+              options.onSuccess();
+            } else {
+              notify(data.message || "done");
+            }
+          },
+        }
+      );
     },
-    [tasks, persist]
+    [updateTaskMutation, refetch]
   );
 
   const deleteTask = useCallback(
     (id: string) => {
-      persist(tasks.filter((t) => t.id !== id));
+      deleteTaskMutation.mutate(
+        { id },
+        {
+          onSuccess: (data) => {
+            refetch();
+            notify(data.message || "done");
+          },
+        }
+      );
     },
-    [tasks, persist]
+    [deleteTaskMutation, refetch]
   );
 
   const toggleStatus = useCallback(
     (id: string) => {
-      persist(
-        tasks.map((t) =>
-          t.id === id
-            ? { ...t, status: t.status === "pending" ? "completed" : "pending" }
-            : t
-        )
-      );
+      const task = tasks.find((t) => t.id === id);
+      if (task) {
+        const newStatus = task.status === "pending" ? "completed" : "pending";
+        updateTaskMutation.mutate(
+          { id, data: { status: newStatus } },
+          {
+            onSuccess: (data) => {
+              refetch();
+              notify(data.message || "done");
+            },
+          }
+        );
+      }
     },
-    [tasks, persist]
+    [tasks, updateTaskMutation, refetch]
   );
 
   const getTask = useCallback(
@@ -102,7 +121,16 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <TaskContext.Provider
-      value={{ tasks, addTask, updateTask, deleteTask, toggleStatus, getTask }}
+      value={{
+        tasks,
+        isLoading,
+        addTask,
+        updateTask,
+        deleteTask,
+        toggleStatus,
+        getTask,
+        refresh: refetch,
+      }}
     >
       {children}
     </TaskContext.Provider>

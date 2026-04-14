@@ -15,6 +15,9 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { TaskProvider } from "@/context/TaskContext";
+import { setBaseUrl } from "@workspace/api-client-react";
+
+setBaseUrl(process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000");
 
 SplashScreen.preventAutoHideAsync();
 
@@ -46,6 +49,7 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
+  // Proceed even if fonts fail to load, falling back to system fonts.
   if (!fontsLoaded && !fontError) return null;
 
   return (

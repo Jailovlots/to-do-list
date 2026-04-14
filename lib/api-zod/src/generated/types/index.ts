@@ -6,4 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./createTask";
+export * from "./createTask201";
+export * from "./deleteTask200";
 export * from "./healthStatus";
+export * from "./task";
+export * from "./taskStatus";
+export * from "./updateTask";
+export * from "./updateTask200";
+export * from "./updateTaskStatus";

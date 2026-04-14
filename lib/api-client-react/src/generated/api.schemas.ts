@@ -8,3 +8,52 @@
 export interface HealthStatus {
   status: string;
 }
+
+export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
+
+export const TaskStatus = {
+  pending: "pending",
+  completed: "completed",
+} as const;
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string | null;
+  dueDate?: string | null;
+  status: TaskStatus;
+  createdAt: string;
+}
+
+export interface CreateTask {
+  title: string;
+  description?: string | null;
+  dueDate?: string | null;
+}
+
+export type UpdateTaskStatus =
+  (typeof UpdateTaskStatus)[keyof typeof UpdateTaskStatus];
+
+export const UpdateTaskStatus = {
+  pending: "pending",
+  completed: "completed",
+} as const;
+
+export interface UpdateTask {
+  title?: string;
+  description?: string | null;
+  dueDate?: string | null;
+  status?: UpdateTaskStatus;
+}
+
+export type CreateTask201 = Task & {
+  message: string;
+};
+
+export type UpdateTask200 = Task & {
+  message: string;
+};
+
+export type DeleteTask200 = {
+  message: string;
+};

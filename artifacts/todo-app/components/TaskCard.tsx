@@ -38,8 +38,8 @@ function isOverdue(dateStr: string | null, status: string): boolean {
 export function TaskCard({ task, onPress, onToggle, onDelete }: TaskCardProps) {
   const colors = useColors();
   const completed = task.status === "completed";
-  const overdue = isOverdue(task.dueDate, task.status);
-  const formattedDate = formatDate(task.dueDate);
+  const overdue = isOverdue(task.dueDate ?? null, task.status);
+  const formattedDate = formatDate(task.dueDate ?? null);
 
   const handleToggle = () => {
     if (Platform.OS !== "web") {

@@ -45,7 +45,7 @@ export default function EditTaskScreen() {
     }
     updateTask(id, {
       title: title.trim(),
-      description: description.trim(),
+      description: description.trim() || null,
       dueDate,
     });
     if (Platform.OS !== "web") {
