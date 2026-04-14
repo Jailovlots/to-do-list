@@ -7,6 +7,9 @@
       "path": "./lib/db"
     },
     {
+      "path": "./lib/db/tsconfig.node.json"
+    },
+    {
       "path": "./lib/api-client-react"
     },
     {

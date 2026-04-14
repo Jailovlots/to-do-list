@@ -12,12 +12,20 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { View, StyleSheet, Platform } from "react-native";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { TaskProvider } from "@/context/TaskContext";
 import { setBaseUrl } from "@workspace/api-client-react";
 
-setBaseUrl(process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000");
+const getBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
+  if (Platform.OS === "web") return "http://localhost:5000";
+  // Fallback for mobile if env is missing (not ideal, but safer)
+  return "http://10.189.33.139:5000";
+};
+
+setBaseUrl(getBaseUrl());
 
 SplashScreen.preventAutoHideAsync();
 
@@ -59,7 +67,11 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
               <TaskProvider>
-                <RootLayoutNav />
+                <View style={styles.appWrapper}>
+                  <View style={styles.contentContainer}>
+                    <RootLayoutNav />
+                  </View>
+                </View>
               </TaskProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
@@ -68,3 +80,25 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  appWrapper: {
+    flex: 1,
+    backgroundColor: Platform.OS === "web" ? "#f4f4f5" : "transparent",
+    alignItems: "center",
+  },
+  contentContainer: {
+    flex: 1,
+    width: "100%",
+    maxWidth: Platform.OS === "web" ? 500 : "100%",
+    backgroundColor: "#fff",
+    // Adding a subtle shadow for web to distinguish the "phone" container
+    ...(Platform.OS === "web" && {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.1,
+      shadowRadius: 15,
+      elevation: 5,
+    }),
+  },
+});

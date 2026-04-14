@@ -55,15 +55,17 @@ export function DatePickerField({ value, onChange, label }: DatePickerFieldProps
             height: 48,
             borderRadius: colors.radius,
             borderWidth: 1.5,
+            borderStyle: "solid",
             borderColor: colors.border,
             backgroundColor: colors.input,
             paddingLeft: 14,
             paddingRight: 14,
             fontSize: 15,
             color: colors.foreground,
-            fontFamily: "Inter_400Regular",
+            fontFamily: "Inter_400Regular, sans-serif",
             width: "100%",
             boxSizing: "border-box" as any,
+            outline: "none",
           }}
         />
         {value && (

@@ -39,7 +39,7 @@ export default function AddTaskScreen() {
           if (Platform.OS !== "web") {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }
-          Alert.alert("done", `"${title.trim()}" has been added to your list.`, [
+          Alert.alert("Task Added", `"${title.trim()}" has been added to your list.`, [
             { text: "Add Another", onPress: () => { setTitle(""); setDescription(""); setDueDate(null); } },
             { text: "View Tasks", onPress: () => router.replace("/tasks") },
             { text: "Main Menu", onPress: () => router.replace("/") },
@@ -56,7 +56,7 @@ export default function AddTaskScreen() {
           styles.header,
           {
             backgroundColor: colors.primary,
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0),
+            paddingTop: insets.top + (Platform.OS === "web" ? 32 : 16),
           },
         ]}
       >

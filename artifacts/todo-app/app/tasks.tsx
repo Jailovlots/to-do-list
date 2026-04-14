@@ -79,7 +79,7 @@ export default function TasksScreen() {
           styles.header,
           {
             backgroundColor: colors.primary,
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0),
+            paddingTop: insets.top + (Platform.OS === "web" ? 32 : 16),
           },
         ]}
       >

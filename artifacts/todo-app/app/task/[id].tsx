@@ -43,17 +43,22 @@ export default function EditTaskScreen() {
       Alert.alert("Title required", "Please enter a task title.");
       return;
     }
-    updateTask(id, {
-      title: title.trim(),
-      description: description.trim() || null,
-      dueDate,
-    });
-    if (Platform.OS !== "web") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-    Alert.alert("Changes Saved", `"${title.trim()}" has been updated.`, [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+    updateTask(
+      id,
+      {
+        title: title.trim(),
+        description: description.trim() || null,
+        dueDate,
+      },
+      {
+        onSuccess: () => {
+          if (Platform.OS !== "web") {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+          router.back();
+        },
+      }
+    );
   };
 
   const handleDelete = () => {
@@ -66,8 +71,11 @@ export default function EditTaskScreen() {
           text: "Yes, Delete",
           style: "destructive",
           onPress: () => {
-            deleteTask(id);
-            router.replace("/tasks");
+            deleteTask(id, {
+              onSuccess: () => {
+                router.replace("/tasks");
+              },
+            });
           },
         },
       ]

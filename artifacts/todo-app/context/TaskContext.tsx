@@ -4,11 +4,13 @@ import React, {
   useContext,
 } from "react";
 import { Alert, Platform } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useListTasks,
   useCreateTask,
   useUpdateTask,
   useDeleteTask,
+  getListTasksQueryKey,
   type Task,
 } from "@workspace/api-client-react";
 
@@ -19,8 +21,8 @@ interface TaskContextValue {
   isLoading: boolean;
   addTask: (task: { title: string; description?: string; dueDate?: string | null }, options?: { onSuccess?: () => void }) => void;
   updateTask: (id: string, updates: { title?: string; description?: string | null; dueDate?: string | null; status?: "pending" | "completed" }, options?: { onSuccess?: () => void }) => void;
-  deleteTask: (id: string) => void;
-  toggleStatus: (id: string) => void;
+  deleteTask: (id: string, options?: { onSuccess?: () => void }) => void;
+  toggleStatus: (id: string, options?: { onSuccess?: () => void }) => void;
   getTask: (id: string) => Task | undefined;
   refresh: () => void;
 }
@@ -37,28 +39,36 @@ const notify = (title: string, message?: string) => {
 };
 
 export function TaskProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const { data: tasks = [], isLoading, refetch } = useListTasks();
   const createTaskMutation = useCreateTask();
   const updateTaskMutation = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
+
+  const sync = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+  }, [queryClient]);
 
   const addTask = useCallback(
     (task: { title: string; description?: string | null; dueDate?: string | null }, options?: { onSuccess?: () => void }) => {
       createTaskMutation.mutate(
         { data: task },
         {
-          onSuccess: (data) => {
-            refetch();
+          onSuccess: () => {
+            sync();
             if (options?.onSuccess) {
               options.onSuccess();
             } else {
-              notify(data.message || "done");
+              notify("Success", "Task created successfully");
             }
+          },
+          onError: (error) => {
+            notify("Error", error.message || "Failed to create task");
           },
         }
       );
     },
-    [createTaskMutation, refetch]
+    [createTaskMutation, sync]
   );
 
   const updateTask = useCallback(
@@ -66,52 +76,69 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       updateTaskMutation.mutate(
         { id, data: updates },
         {
-          onSuccess: (data) => {
-            refetch();
+          onSuccess: () => {
+            sync();
             if (options?.onSuccess) {
               options.onSuccess();
             } else {
-              notify(data.message || "done");
+              notify("Success", "Changes saved");
             }
+          },
+          onError: (error) => {
+            notify("Error", error.message || "Failed to update task");
           },
         }
       );
     },
-    [updateTaskMutation, refetch]
+    [updateTaskMutation, sync]
   );
 
   const deleteTask = useCallback(
-    (id: string) => {
+    (id: string, options?: { onSuccess?: () => void }) => {
       deleteTaskMutation.mutate(
         { id },
         {
-          onSuccess: (data) => {
-            refetch();
-            notify(data.message || "done");
+          onSuccess: () => {
+            sync();
+            if (options?.onSuccess) {
+              options.onSuccess();
+            } else {
+              notify("Success", "Task deleted");
+            }
+          },
+          onError: (error) => {
+            notify("Error", error.message || "Failed to delete task");
           },
         }
       );
     },
-    [deleteTaskMutation, refetch]
+    [deleteTaskMutation, sync]
   );
 
   const toggleStatus = useCallback(
-    (id: string) => {
+    (id: string, options?: { onSuccess?: () => void }) => {
       const task = tasks.find((t) => t.id === id);
       if (task) {
         const newStatus = task.status === "pending" ? "completed" : "pending";
         updateTaskMutation.mutate(
           { id, data: { status: newStatus } },
           {
-            onSuccess: (data) => {
-              refetch();
-              notify(data.message || "done");
+            onSuccess: () => {
+              sync();
+              if (options?.onSuccess) {
+                options.onSuccess();
+              } else {
+                notify("Success", `Task marked as ${newStatus}`);
+              }
+            },
+            onError: (error) => {
+              notify("Error", error.message || "Failed to update status");
             },
           }
         );
       }
     },
-    [tasks, updateTaskMutation, refetch]
+    [tasks, updateTaskMutation, sync]
   );
 
   const getTask = useCallback(
