@@ -5,7 +5,12 @@
   },
   "build": {
     "base": {
-      "cacheKey": "pnpm-monorepo-v4"
+      "env": {
+        "EXPO_ROUTER_APP_ROOT": "../../app"
+      },
+      "cache": {
+        "key": "pnpm-monorepo-v5"
+      }
     },
     "development": {
       "extends": "base",
