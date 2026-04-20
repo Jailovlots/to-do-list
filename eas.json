@@ -5,10 +5,7 @@
   },
   "build": {
     "base": {
-      "env": {
-        "PNPM_VERSION": "10.33.0"
-      },
-      "cacheKey": "pnpm-monorepo-v1"
+      "cacheKey": "pnpm-monorepo-v2"
     },
     "development": {
       "extends": "base",
