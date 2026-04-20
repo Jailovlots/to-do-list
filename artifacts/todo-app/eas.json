@@ -6,7 +6,7 @@
   "build": {
     "base": {
       "cache": {
-        "key": "pnpm-monorepo-v5"
+        "key": "pnpm-monorepo-v6"
       }
     },
     "development": {
