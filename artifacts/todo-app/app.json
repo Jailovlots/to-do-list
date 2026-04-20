@@ -17,7 +17,7 @@
       "supportsTablet": false
     },
     "android": {
-      "package": "com.tarttol.todoapp"
+      "package": "com.jaicute.todoapp"
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -33,8 +33,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "6405f88e-42a3-42b8-bd82-be2935b6f3ab"
+        "projectId": "f8b674b4-3060-4d98-b097-f900c95939d0"
       }
-    }
+    },
+    "owner": "jaicute"
   }
 }
