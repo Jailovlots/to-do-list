@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { DatePickerField } from "@/components/DatePickerField";
 import { useTasks } from "@/context/TaskContext";
 import { useColors } from "@/hooks/useColors";
@@ -39,10 +40,9 @@ export default function AddTaskScreen() {
           if (Platform.OS !== "web") {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }
-          Alert.alert("Task Added", `"${title.trim()}" has been added to your list.`, [
+          Alert.alert("Success", `"${title.trim()}" added successfully!`, [
             { text: "Add Another", onPress: () => { setTitle(""); setDescription(""); setDueDate(null); } },
-            { text: "View Tasks", onPress: () => router.replace("/tasks") },
-            { text: "Main Menu", onPress: () => router.replace("/") },
+            { text: "Go to Tasks", onPress: () => router.replace("/tasks") },
           ]);
         }
       }
@@ -51,43 +51,47 @@ export default function AddTaskScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View
+      <LinearGradient
+        colors={[colors.primary, "#818CF8"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={[
           styles.header,
           {
-            backgroundColor: colors.primary,
             paddingTop: insets.top + (Platform.OS === "web" ? 32 : 16),
+            paddingBottom: 24,
           },
         ]}
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Feather name="arrow-left" size={22} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Task</Text>
-        <View style={{ width: 36 }} />
-      </View>
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Feather name="arrow-left" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>New Task</Text>
+          <View style={{ width: 44 }} />
+        </View>
+      </LinearGradient>
 
       <ScrollView
         contentContainerStyle={[
           styles.form,
-          { paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 24) },
+          { paddingBottom: insets.bottom + 40 },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>TITLE *</Text>
+          <Text style={[styles.label, { color: colors.mutedForeground }]}>Task Title</Text>
           <TextInput
             value={title}
             onChangeText={setTitle}
-            placeholder="e.g. Buy groceries"
+            placeholder="What needs to be done?"
             placeholderTextColor={colors.mutedForeground}
             style={[
               styles.input,
               {
-                backgroundColor: colors.input,
+                backgroundColor: colors.card,
                 borderColor: colors.border,
-                borderRadius: colors.radius,
                 color: colors.foreground,
               },
             ]}
@@ -97,20 +101,19 @@ export default function AddTaskScreen() {
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.mutedForeground }]}>DESCRIPTION</Text>
+          <Text style={[styles.label, { color: colors.mutedForeground }]}>Description</Text>
           <TextInput
             value={description}
             onChangeText={setDescription}
-            placeholder="Optional details..."
+            placeholder="Add some details..."
             placeholderTextColor={colors.mutedForeground}
             multiline
             numberOfLines={4}
             style={[
               styles.textarea,
               {
-                backgroundColor: colors.input,
+                backgroundColor: colors.card,
                 borderColor: colors.border,
-                borderRadius: colors.radius,
                 color: colors.foreground,
               },
             ]}
@@ -120,34 +123,36 @@ export default function AddTaskScreen() {
 
         <DatePickerField value={dueDate} onChange={setDueDate} label="DUE DATE" />
 
-        <Pressable
-          onPress={handleSave}
-          style={({ pressed }) => [
-            styles.saveBtn,
-            {
-              backgroundColor: colors.primary,
-              borderRadius: colors.radius,
-              opacity: pressed ? 0.85 : 1,
-            },
-          ]}
-        >
-          <Feather name="check" size={18} color="#fff" />
-          <Text style={styles.saveBtnText}>Save Task</Text>
-        </Pressable>
+        <View style={styles.actionRow}>
+          <Pressable
+            onPress={handleSave}
+            style={({ pressed }) => [
+              styles.saveBtn,
+              {
+                backgroundColor: colors.primary,
+                opacity: pressed ? 0.9 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+              },
+            ]}
+          >
+            <Feather name="check" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.saveBtnText}>Save Task</Text>
+          </Pressable>
 
-        <Pressable
-          onPress={() => router.back()}
-          style={({ pressed }) => [
-            styles.cancelBtn,
-            {
-              backgroundColor: colors.secondary,
-              borderRadius: colors.radius,
-              opacity: pressed ? 0.85 : 1,
-            },
-          ]}
-        >
-          <Text style={[styles.cancelBtnText, { color: colors.secondaryForeground }]}>Cancel</Text>
-        </Pressable>
+          <Pressable
+            onPress={() => router.back()}
+            style={({ pressed }) => [
+              styles.cancelBtn,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                opacity: pressed ? 0.9 : 1,
+              },
+            ]}
+          >
+            <Text style={[styles.cancelBtnText, { color: colors.mutedForeground }]}>Cancel</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </View>
   );
@@ -156,65 +161,97 @@ export default function AddTaskScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: {
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    paddingHorizontal: 20,
+  },
+  headerTop: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 20,
+    justifyContent: "space-between",
   },
-  backBtn: { padding: 6, marginRight: 8 },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontFamily: "Inter_700Bold",
+    fontSize: 22,
+    fontWeight: "800",
     color: "#fff",
-    textAlign: "center",
+    letterSpacing: -0.5,
   },
   form: {
-    padding: 20,
-    gap: 18,
+    padding: 24,
+    gap: 24,
   },
-  fieldGroup: { gap: 6 },
+  fieldGroup: { gap: 10 },
   label: {
-    fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    fontSize: 14,
+    fontWeight: "700",
+    marginLeft: 4,
   },
   input: {
-    height: 48,
-    paddingHorizontal: 14,
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
-    borderWidth: 1.5,
+    height: 56,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontWeight: "500",
+    borderWidth: 1,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   textarea: {
-    height: 100,
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
-    borderWidth: 1.5,
+    height: 120,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    fontSize: 16,
+    fontWeight: "500",
+    borderWidth: 1,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  actionRow: {
+    gap: 12,
+    marginTop: 12,
   },
   saveBtn: {
-    height: 52,
+    height: 56,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    marginTop: 8,
+    borderRadius: 18,
+    shadowColor: "#6366F1",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   saveBtnText: {
-    fontSize: 16,
-    fontFamily: "Inter_600SemiBold",
+    fontSize: 18,
+    fontWeight: "700",
     color: "#fff",
   },
   cancelBtn: {
-    height: 48,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 18,
+    borderWidth: 1,
   },
   cancelBtnText: {
-    fontSize: 15,
-    fontFamily: "Inter_500Medium",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
+

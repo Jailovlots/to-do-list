@@ -9,6 +9,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useDerivedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { Task } from "@/context/TaskContext";
 import { useColors } from "@/hooks/useColors";
 
@@ -55,6 +62,26 @@ export function TaskCard({ task, onPress, onToggle, onDelete }: TaskCardProps) {
     onDelete();
   };
 
+  const progress = useDerivedValue(() => {
+    return withSpring(completed ? 1 : 0);
+  });
+
+  const animatedCheckboxStyle = useAnimatedStyle(() => {
+    return {
+      backgroundColor: interpolateColor(
+        progress.value,
+        [0, 1],
+        ["transparent", colors.primary]
+      ),
+      borderColor: interpolateColor(
+        progress.value,
+        [0, 1],
+        [colors.border, colors.primary]
+      ),
+      transform: [{ scale: withSpring(completed ? 1.05 : 1) }],
+    };
+  });
+
   return (
     <Pressable
       onPress={onPress}
@@ -70,21 +97,26 @@ export function TaskCard({ task, onPress, onToggle, onDelete }: TaskCardProps) {
         completed && { opacity: 0.7 },
       ]}
     >
-      <TouchableOpacity
-        onPress={handleToggle}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      <Animated.View
         style={[
           styles.checkbox,
-          {
-            borderColor: completed ? colors.primary : colors.border,
-            backgroundColor: completed ? colors.primary : "transparent",
-            borderRadius: 8,
-          },
+          animatedCheckboxStyle,
+          { borderRadius: 8 },
         ]}
-        activeOpacity={0.7}
       >
-        {completed && <Feather name="check" size={13} color={colors.primaryForeground} />}
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleToggle}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.checkboxTouch}
+          activeOpacity={0.7}
+        >
+          {completed && (
+            <Animated.View entering={withSpring(1)}>
+              <Feather name="check" size={13} color={colors.primaryForeground} />
+            </Animated.View>
+          )}
+        </TouchableOpacity>
+      </Animated.View>
 
       <View style={styles.content}>
         <Text
@@ -155,10 +187,14 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
     marginRight: 12,
     flexShrink: 0,
+  },
+  checkboxTouch: {
+    width: '100%',
+    height: '100%',
+    alignItems: "center",
+    justifyContent: "center",
   },
   content: {
     flex: 1,

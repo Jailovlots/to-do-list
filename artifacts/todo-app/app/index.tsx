@@ -9,10 +9,16 @@ import {
   StyleSheet,
   Text,
   View,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { FadeInDown, FadeInUp, Layout, ZoomIn } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { useTasks } from "@/context/TaskContext";
 import { useColors } from "@/hooks/useColors";
+
+const { width } = Dimensions.get("window");
 
 interface MenuItemProps {
   icon: string;
@@ -21,47 +27,50 @@ interface MenuItemProps {
   onPress: () => void;
   accent?: string;
   badge?: number;
+  delay?: number;
 }
 
-function MenuItem({ icon, label, subtitle, onPress, accent, badge }: MenuItemProps) {
+function MenuItem({ icon, label, subtitle, onPress, accent, badge, delay = 0 }: MenuItemProps) {
   const colors = useColors();
   const itemAccent = accent ?? colors.primary;
 
   const handlePress = () => {
     if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     onPress();
   };
 
   return (
-    <Pressable
-      onPress={handlePress}
-      style={({ pressed }) => [
-        styles.menuItem,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          borderRadius: colors.radius,
-          opacity: pressed ? 0.88 : 1,
-          shadowColor: colors.shadow,
-        },
-      ]}
-    >
-      <View style={[styles.iconWrap, { backgroundColor: itemAccent + "18", borderRadius: 12 }]}>
-        <Feather name={icon as any} size={22} color={itemAccent} />
-      </View>
-      <View style={styles.menuText}>
-        <Text style={[styles.menuLabel, { color: colors.foreground }]}>{label}</Text>
-        <Text style={[styles.menuSub, { color: colors.mutedForeground }]}>{subtitle}</Text>
-      </View>
-      {badge !== undefined && badge > 0 && (
-        <View style={[styles.badge, { backgroundColor: itemAccent }]}>
-          <Text style={styles.badgeText}>{badge}</Text>
+    <Animated.View entering={FadeInDown.delay(delay).springify()}>
+      <Pressable
+        onPress={handlePress}
+        style={({ pressed }) => [
+          styles.menuItem,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+            borderRadius: 24,
+            opacity: pressed ? 0.9 : 1,
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+          },
+        ]}
+      >
+        <View style={[styles.iconWrap, { backgroundColor: itemAccent + "15" }]}>
+          <Feather name={icon as any} size={24} color={itemAccent} />
         </View>
-      )}
-      <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
-    </Pressable>
+        <View style={styles.menuText}>
+          <Text style={[styles.menuLabel, { color: colors.foreground }]}>{label}</Text>
+          <Text style={[styles.menuSub, { color: colors.mutedForeground }]}>{subtitle}</Text>
+        </View>
+        {badge !== undefined && badge > 0 && (
+          <View style={[styles.badge, { backgroundColor: itemAccent }]}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        )}
+        <Feather name="chevron-right" size={20} color={colors.mutedForeground} opacity={0.5} />
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -72,93 +81,134 @@ export default function MainMenu() {
 
   const pending = tasks.filter((t) => t.status === "pending").length;
   const completed = tasks.filter((t) => t.status === "completed").length;
+  const total = tasks.length;
+  const progress = total > 0 ? completed / total : 0;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View
+      <LinearGradient
+        colors={[colors.primary, "#818CF8"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={[
           styles.header,
           {
-            backgroundColor: colors.primary,
-            paddingTop: insets.top + (Platform.OS === "web" ? 32 : 16),
+            paddingTop: insets.top + 20,
+            paddingBottom: 40,
           },
         ]}
       >
-        <Text style={styles.headerTitle}>My Tasks</Text>
-        <Text style={styles.headerSub}>
-          {pending} pending · {completed} done
-        </Text>
-      </View>
+        <Animated.View entering={FadeInUp.duration(600)}>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.headerTitle}>Task Master</Text>
+              <Text style={styles.headerSub}>Manage your daily flow</Text>
+            </View>
+            <Pressable style={styles.profileBtn}>
+              <Feather name="user" size={20} color="#fff" />
+            </Pressable>
+          </View>
+
+          <View style={styles.progressCard}>
+            <View style={styles.progressTextRow}>
+              <Text style={styles.progressLabel}>Overall Progress</Text>
+              <Text style={styles.progressPercent}>{Math.round(progress * 100)}%</Text>
+            </View>
+            <View style={styles.progressBarBg}>
+              <Animated.View 
+                layout={Layout.springify()}
+                style={[styles.progressBarFill, { width: `${progress * 100}%` }]} 
+              />
+            </View>
+            <Text style={styles.progressSubText}>
+              {completed} of {total} tasks completed
+            </Text>
+          </View>
+        </Animated.View>
+      </LinearGradient>
 
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
-          { paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20) },
+          { paddingBottom: insets.bottom + 40 },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>ACTIONS</Text>
+        <Animated.Text
+          entering={FadeInDown.delay(200)}
+          style={[styles.sectionTitle, { color: colors.mutedForeground }]}
+        >
+          QUICK ACTIONS
+        </Animated.Text>
+        
         <MenuItem
-          icon="plus-circle"
-          label="Add Task"
-          subtitle="Create a new task"
+          icon="plus"
+          label="Create Task"
+          subtitle="Plan something new today"
           onPress={() => router.push("/add-task")}
           accent={colors.primary}
+          delay={300}
         />
+        
         <MenuItem
-          icon="list"
-          label="View Tasks"
-          subtitle="Browse all your tasks"
+          icon="layers"
+          label="All Tasks"
+          subtitle="Review and manage list"
           onPress={() => router.push("/tasks")}
           accent="#10b981"
           badge={pending}
-        />
-        <MenuItem
-          icon="edit-3"
-          label="Update Task"
-          subtitle="Edit an existing task"
-          onPress={() => router.push("/tasks?mode=edit")}
-          accent="#f59e0b"
-        />
-        <MenuItem
-          icon="trash-2"
-          label="Delete Task"
-          subtitle="Remove a task"
-          onPress={() => router.push("/tasks?mode=delete")}
-          accent="#ef4444"
+          delay={400}
         />
 
-        <Text style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 24 }]}>
-          STATS
-        </Text>
-        <View
-          style={[
-            styles.statsRow,
-            { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius },
-          ]}
-        >
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.primary }]}>{tasks.length}</Text>
-            <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Total</Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: "#f59e0b" }]}>{pending}</Text>
-            <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Pending</Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: "#10b981" }]}>{completed}</Text>
-            <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Done</Text>
-          </View>
+        <View style={styles.gridRow}>
+          <Animated.View entering={ZoomIn.delay(500)} style={styles.gridCol}>
+            <Pressable 
+              onPress={() => router.push("/tasks?mode=edit")}
+              style={[styles.smallCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              <View style={[styles.smallIconWrap, { backgroundColor: "#F59E0B15" }]}>
+                <Feather name="edit-3" size={20} color="#F59E0B" />
+              </View>
+              <Text style={[styles.smallCardLabel, { color: colors.foreground }]}>Edit</Text>
+            </Pressable>
+          </Animated.View>
+
+          <Animated.View entering={ZoomIn.delay(600)} style={styles.gridCol}>
+            <Pressable 
+              onPress={() => router.push("/tasks?mode=delete")}
+              style={[styles.smallCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              <View style={[styles.smallIconWrap, { backgroundColor: "#EF444415" }]}>
+                <Feather name="trash-2" size={20} color="#EF4444" />
+              </View>
+              <Text style={[styles.smallCardLabel, { color: colors.foreground }]}>Delete</Text>
+            </Pressable>
+          </Animated.View>
         </View>
+
+        <Animated.Text
+          entering={FadeInDown.delay(700)}
+          style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 24 }]}
+        >
+          SYSTEM
+        </Animated.Text>
+        
+        <MenuItem
+          icon="settings"
+          label="Preferences"
+          subtitle="App theme and settings"
+          onPress={() => {}} // Future feature
+          accent="#64748B"
+          delay={800}
+        />
 
         <MenuItem
           icon="log-out"
-          label="Exit App"
-          subtitle="Close the application"
+          label="Exit"
+          subtitle="Goodbye for now"
           onPress={() => router.push("/goodbye")}
-          accent="#8b83b8"
+          accent="#6366F1"
+          delay={900}
         />
       </ScrollView>
     </View>
@@ -169,90 +219,157 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   header: {
     paddingHorizontal: 24,
-    paddingBottom: 28,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
   },
   headerTitle: {
-    fontSize: 32,
-    fontFamily: "Inter_700Bold",
+    fontSize: 28,
+    fontWeight: "800",
     color: "#ffffff",
-    marginBottom: 4,
+    letterSpacing: -0.5,
   },
   headerSub: {
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
-    color: "rgba(255,255,255,0.75)",
+    color: "rgba(255,255,255,0.8)",
+    marginTop: 2,
+  },
+  profileBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  progressCard: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 24,
+    padding: 20,
+    marginTop: 10,
+  },
+  progressTextRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  progressLabel: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  progressPercent: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  progressBarBg: {
+    height: 8,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 4,
+    overflow: "hidden",
+    marginBottom: 12,
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 4,
+  },
+  progressSubText: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 12,
   },
   scroll: {
-    padding: 16,
-    gap: 10,
+    padding: 20,
   },
   sectionTitle: {
-    fontSize: 11,
-    fontFamily: "Inter_600SemiBold",
-    letterSpacing: 0.8,
-    marginBottom: 4,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+    marginBottom: 12,
     marginLeft: 4,
+    textTransform: "uppercase",
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    gap: 14,
+    padding: 18,
+    marginBottom: 12,
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 16,
   },
   menuText: { flex: 1 },
   menuLabel: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: -0.2,
   },
   menuSub: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    marginTop: 1,
+    fontSize: 14,
+    marginTop: 2,
   },
   badge: {
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 6,
+    marginRight: 12,
   },
   badgeText: {
     color: "#fff",
-    fontSize: 11,
-    fontFamily: "Inter_700Bold",
-  },
-  statsRow: {
-    flexDirection: "row",
-    borderWidth: 1,
-    padding: 16,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: "center",
-    gap: 2,
-  },
-  statDivider: {
-    width: 1,
-    marginVertical: 4,
-  },
-  statNumber: {
-    fontSize: 26,
-    fontFamily: "Inter_700Bold",
-  },
-  statLabel: {
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontWeight: "800",
+  },
+  gridRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 4,
+  },
+  gridCol: {
+    flex: 1,
+  },
+  smallCard: {
+    padding: 18,
+    borderRadius: 24,
+    borderWidth: 1,
+    alignItems: "center",
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  smallIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  smallCardLabel: {
+    fontSize: 14,
+    fontWeight: "700",
   },
 });
+
