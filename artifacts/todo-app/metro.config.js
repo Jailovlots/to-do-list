@@ -17,6 +17,6 @@ config.resolver.nodeModulesPaths = [
 ];
 
 // 3. Optimize for pnpm (Note: hierarchical lookup is necessary for some pnpm structures)
-// config.resolver.disableHierarchicalLookup = true;
+config.resolver.disableHierarchicalLookup = true;
 
 module.exports = config;

@@ -21,8 +21,9 @@ import { setBaseUrl } from "@workspace/api-client-react";
 const getBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
   if (Platform.OS === "web") return "http://localhost:5000";
-  // Fallback for mobile if env is missing (not ideal, but safer)
-  return "https://to-do-list-tloc.onrender.com/api";
+  // Fallback for mobile if env is missing.
+  // NOTE: Do NOT include /api here — the generated client already appends /api/tasks etc.
+  return "https://to-do-list-tloc.onrender.com";
 };
 
 setBaseUrl(getBaseUrl());
